@@ -10,4 +10,11 @@ router.get('/items', (req, res) => {
     });
 });
 
+// Buy Items
+router.post('/buy', (req, res) => {
+    const { itemId } = req.body;
+    // Placeholder logic for buying an item
+    res.json({ message: `Item with ID ${itemId} purchased successfully!` });
+});
+
 module.exports = router;
