@@ -17,7 +17,7 @@ router.post('/register', async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   });
-  
+
 // Login Route
 router.post('/login', (req, res) => {
     const { username, password } = req.body;
@@ -31,5 +31,35 @@ router.post('/login', (req, res) => {
         res.json({ token });
     });
 });
+
+  
+router.get('/user/:username', async (req, res) => {
+    const { username } = req.params;
+    console.log('Requested username:', username);  // Debug log
+  
+    try {
+      db.query('SELECT gold, tickets FROM users WHERE username = ?', [username], (err, results) => {
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ message: 'Server error' });
+        }
+  
+        console.log('Database query results:', results);
+  
+        if (results.length === 0) {
+          console.log('User not found:', username);
+          return res.status(404).json({ message: 'User not found' });
+        }
+  
+        const { gold, tickets } = results[0];
+        res.json({ gold, tickets });
+      });
+    } catch (err) {
+      console.error('Server error:', err);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  
 
 module.exports = router;
