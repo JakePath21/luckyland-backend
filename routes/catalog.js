@@ -79,6 +79,25 @@ router.get('/items/user/:userId', (req, res) => {
     });
   });
   
+  // Update an item
+router.put('/update/:itemId', (req, res) => {
+    const { itemId } = req.params;
+    const { name, description, cost, currency_type } = req.body;
+  
+    const query = `
+      UPDATE items
+      SET name = ?, description = ?, cost = ?, currency_type = ?
+      WHERE id = ?
+    `;
+  
+    db.query(query, [name, description, cost, currency_type, itemId], (err) => {
+      if (err) {
+        console.error('Error updating item:', err);
+        return res.status(500).json({ message: 'Failed to update item.' });
+      }
+      res.json({ message: 'Item updated successfully.' });
+    });
+  });
   
 
 // Buy Item Route
@@ -160,6 +179,51 @@ router.get('/owned/:userId', (req, res) => {
     );
   });
   
+  router.put('/edit/:itemId', (req, res) => {
+    const { itemId } = req.params;
+    const { name, description, cost, currencyType } = req.body;
+  
+    if (!name || !description || !cost || !currencyType) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+  
+    const query = `
+      UPDATE items
+      SET name = ?, description = ?, cost = ?, currency_type = ?
+      WHERE id = ?
+    `;
+  
+    db.query(query, [name, description, cost, currencyType, itemId], (err) => {
+      if (err) {
+        console.error('Database error:', err);
+        return res.status(500).json({ message: 'Failed to update item.' });
+      }
+      res.json({ message: 'Item updated successfully.' });
+    });
+  });
+  
+  router.delete('/delete/:itemId', (req, res) => {
+    const { itemId } = req.params;
+  
+    const deleteItemQuery = 'DELETE FROM items WHERE id = ?';
+    const deleteOwnedItemsQuery = 'DELETE FROM owned_items WHERE item_id = ?';
+  
+    db.query(deleteOwnedItemsQuery, [itemId], (err) => {
+      if (err) {
+        console.error('Error deleting item from owned_items:', err);
+        return res.status(500).json({ message: 'Failed to delete item from inventories.' });
+      }
+  
+      db.query(deleteItemQuery, [itemId], (err) => {
+        if (err) {
+          console.error('Error deleting item:', err);
+          return res.status(500).json({ message: 'Failed to delete item.' });
+        }
+  
+        res.json({ message: 'Item deleted successfully.' });
+      });
+    });
+  });
   
   
   // Get Equipped Items for a User
