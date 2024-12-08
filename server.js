@@ -4,6 +4,10 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
 
 
+const catalogRoutes = require('./routes/catalog');
+app.use('/api/catalog', catalogRoutes);
+
+
 dotenv.config();
 
 const app = express();
