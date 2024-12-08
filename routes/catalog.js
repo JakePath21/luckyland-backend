@@ -46,7 +46,7 @@ router.get('/items', (req, res) => {
 });
 
 // Get all catalog items with ownership status
-router.get('/items/:userId', (req, res) => {
+router.get('/items/user/:userId', (req, res) => {
     const { userId } = req.params;
   
     const query = `
@@ -75,9 +75,10 @@ router.get('/items/:userId', (req, res) => {
       if (err || results.length === 0) {
         return res.status(404).json({ message: 'Item not found' });
       }
-      res.json(results[0]); // Return a single item, not an array
+      res.json(results[0]); // Ensure it returns a single item object
     });
   });
+  
   
 
 // Buy Item Route
@@ -139,12 +140,15 @@ router.post('/buy', (req, res) => {
   });
 });
 
-// Get Owned Items for a User
+// Get Owned Items for a User with Equipped Status
 router.get('/owned/:userId', (req, res) => {
     const { userId } = req.params;
   
     db.query(
-      'SELECT item_id FROM owned_items WHERE user_id = ?',
+      `SELECT owned_items.item_id, items.name, items.image_url, owned_items.equipped 
+       FROM owned_items 
+       INNER JOIN items ON owned_items.item_id = items.id 
+       WHERE owned_items.user_id = ?`,
       [userId],
       (err, results) => {
         if (err) {
@@ -157,21 +161,36 @@ router.get('/owned/:userId', (req, res) => {
   });
   
   
+  
+  // Get Equipped Items for a User
+// Get Equipped Items for a User
+router.get('/equipped/:userId', (req, res) => {
+    const { userId } = req.params;
+  
+    db.query(
+      'SELECT owned_items.item_id, items.name, items.image_url FROM owned_items INNER JOIN items ON owned_items.item_id = items.id WHERE owned_items.user_id = ? AND owned_items.equipped = 1',
+      [userId],
+      (err, results) => {
+        if (err) {
+          console.error('Error fetching equipped items:', err);
+          return res.status(500).json({ message: 'Failed to fetch equipped items.' });
+        }
+        res.json(results);
+      }
+    );
+  });
+  
+  
 
 // Equip Item Route
 router.post('/equip', (req, res) => {
-  const { userId, itemId } = req.body;
-
-  if (!userId || !itemId) {
-    return res.status(400).json({ message: 'User ID and Item ID are required.' });
-  }
-
-  db.query('UPDATE owned_items SET equipped = 0 WHERE user_id = ?', [userId], (err) => {
-    if (err) {
-      console.error('Error unequipping items:', err);
-      return res.status(500).json({ message: 'Failed to unequip items.' });
+    const { userId, itemId } = req.body;
+  
+    if (!userId || !itemId) {
+      return res.status(400).json({ message: 'User ID and Item ID are required.' });
     }
-
+  
+    // Equip the selected item
     db.query('UPDATE owned_items SET equipped = 1 WHERE user_id = ? AND item_id = ?', [userId, itemId], (err) => {
       if (err) {
         console.error('Error equipping item:', err);
@@ -180,8 +199,9 @@ router.post('/equip', (req, res) => {
       res.json({ message: 'Item equipped successfully!' });
     });
   });
-});
-
+  
+  
+  
 // Unequip Item Route
 router.post('/unequip', (req, res) => {
   const { userId, itemId } = req.body;
