@@ -5,6 +5,8 @@ const http = require('http'); // Import the http module
 const { Server } = require('socket.io'); // Import the Socket.IO server
 const authRoutes = require('./routes/auth');
 const catalogRoutes = require('./routes/catalog');
+const friendsRoutes = require('./routes/friends');
+const usersRoutes = require('./routes/users');
 const db = require('./models/db'); // If you have a database connection file
 
 dotenv.config();
@@ -20,7 +22,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/uploads', express.static('uploads'));
-
+app.use('/api/friends', friendsRoutes);
+app.use('/api/users', usersRoutes);
 
 // Create an HTTP server to work with Socket.IO
 const server = http.createServer(app);
